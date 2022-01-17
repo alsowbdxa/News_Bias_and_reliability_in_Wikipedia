@@ -194,6 +194,23 @@ remove_list = ['google','archive','youtube','go','imdb','amazon','twitter',
                'facebook']
 #we remove above domain from our domain list
 
+# then try to match the domain with political bias(not the file we extracted), it's https://github.com/Harshdeep1996/politicalBiasSem/blob/main/political_bias_icwsm_2018.tsv
+#read political_bias_icwsm_2018.tsv.txt and try to match
+political_bias = pd.read_csv(r"E:\Project 2(Bias and reability on wiki and news)\political_bias_icwsm_2018.tsv.txt",sep='\t')
+bias = political_bias.dropna(subset=['url']) #13842 out of 13870
+bias['URL'] = bias['url'].progress_apply(lambda x:get_domain_name(x))
+url_bias = dict(zip(bias['URL'],bias['political_bias'])) #size is 6600
+
+def url_bias_score(domain_name):
+    try:
+        score = url_bias[domain_name]
+    except:
+        score = ''
+    return score
+
+domain_match_bias = [url_bias_score(i) for i in tqdm(list_domain)] # size is 24956769
+# only match 6,938,569 data, takes up  27.8%
+#domain_match_bias.count('') # 18,018,200 not matched
 
 
 
