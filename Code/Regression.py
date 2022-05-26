@@ -1,6 +1,6 @@
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-from statsmodels.formula.api import ols #加载ols模型
+from statsmodels.formula.api import ols #load ols model
 
 #firstly we use domain name to match bias score and topics, project and reliability, and get citations_bias_reg, which size is 3041283
 citations_bias_reg = pd.merge(citations_bias_factual,match,left_on='domain_x',right_on='domain',how='left')# size is 3041283
