@@ -95,3 +95,21 @@ model_ols = smf.ols(formula="bias_score_avg ~ C(factual, Treatment(reference='MO
 res_ols = model_ols.fit()
 print(res_ols.summary())
 
+#Check multicollinearity
+def vif(df, col_i):    
+# """    df: whole dataset    col_i：Detected column name   """    
+    cols = list(df.columns)    
+    cols.remove(col_i)    
+    cols_noti = cols    
+    formula = col_i + '~' + '+'.join(cols_noti)    
+    r2 = ols(formula, df).fit().rsquared    
+    return 1. / (1. - r2)
+
+test_data = citations_bias_reg_notnull[['Geography',
+       'Culture', 'History_and_Society', 'STEM', 'Biography', 'Medicine',
+       'Biography_science_and_academia_work_group', 'United_States',
+       'Articles_for_creation', 'Politics', 'India', 'Pharmacology', 'Lists',
+       'Military_history', 'Other']]
+for i in test_data.columns:    
+    print(i, '\t VIF value:', vif(df=test_data, col_i=i))
+
