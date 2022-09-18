@@ -5,11 +5,11 @@ This repository offers the code we used in the project *News Bias and reliabilit
 Please find the code in the file *Code*, in this file, we list 5 files as below:
 1. [Supplement news google sources](Code/get_news_google_source.py): Supplement the data from news google.
 
-    1. This script is used for the sources from news.google.com, we use the link to search and find out what news outlet it belongs to.
+    1. This script is used for the sources from “news.google.com”, we use the link to search and find out what news outlet it belongs to.
     2. The result will be used in the second block of Analysis.py.
 2. [Extracting data from Media Bias Monitor](Code/get_bais_form_MM.py ): Extract data from Media Bias Monitor(MBM).
 
-    1. Read the paper for [Media Bias Monitor](https://www.aaai.org/ocs/index.php/ICWSM/ICWSM18/paper/viewFile/17878/17020)) and you can find more details about it.
+    1. Read the paper for [Media Bias Monitor](https://www.aaai.org/ocs/index.php/ICWSM/ICWSM18/paper/viewFile/17878/17020) and you can find more details about it.
 
     2. This process is divided into two steps. Firstly, we use the domain name in our dataset to search in the Media Bias Monitor, then we could get the interest_id for the news outlet which we could use to extract its bias information. Secondly, use the API and interest_id we got in the first step to extract the bias data from Media Bias Monitor.
     3. The result will be *"MM_page1.pkl"* and *MM_page2.pkl* and they can be used to match domain and bias score. 
