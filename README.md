@@ -3,7 +3,7 @@
 This repository offers the code we used in the project *News Bias and reliability in Wikipedia*.
 
 Please find the code in the file *Code*, in this file, we list 5 files as below:
-1. [supplement news google sources](Code/get_news_google_source.py): Supplement the data from news google.
+1. [Supplement news google sources](Code/get_news_google_source.py): Supplement the data from news google.
 
     1. This script is used for the sources from news.google.com, we use the link to search and find out what news outlet it belongs to.
     2. The result will be used in the second block of Analysis.py.
@@ -29,14 +29,14 @@ Please find the code in the file *Code*, in this file, we list 5 files as below:
     1. This script contains 3 blocks: read the whole dataset on Wikipedia, analysis the dataset and Regression analysis.
     
     2. Block 1: Read the whole dataset of Wikipedia
-      1. You need to read the *Wikipedia Citations* dataset and download the [Wikipedia Citations dataset **minimal**](https://github.com/Harshdeep1996/cite-classifications-wiki) and store it in the folder and name it as "minimal_dataset.parquet".
-      2. Execute the first part script to read the main dataset we need.
+        1. You need to read the *Wikipedia Citations* dataset and download the [Wikipedia Citations dataset **minimal**](https://github.com/Harshdeep1996/cite-  classifications-wiki) and store it in the folder and name it as "minimal_dataset.parquet".
+        2. Execute the first part script to read the main dataset we need.
     
     3. Block 2: Analysis of the dataset.
-      1. In this block we firstly clean up our dataset. Including cleaning the sources with "archive.com" and "news.google.com" and extracting the domain name from the URL.
-      2. Secondly, we equip our domain name with bias from Media Bias Monitor and we plot the related plots.
-      3. We equip our data with Wikipedia topics and WikiProjects to analyse the relationship between them and bias. Related plots included.
-      4. We equip the data with reliability from Media Bias Fact Check and do related analysis on them and plots.
+        1. In this block we firstly clean up our dataset. Including cleaning the sources with "archive.com" and "news.google.com" and extracting the domain name from the URL.
+        2. Secondly, we equip our domain name with bias from Media Bias Monitor and we plot the related plots.
+        3. We equip our data with Wikipedia topics and WikiProjects to analyse the relationship between them and bias. Related plots included.
+        4. We equip the data with reliability from Media Bias Fact Check and do related analysis on them and plots.
     
     4. Block 3: Regression analysis.
-      1. After combining all the variables, we use the regression analysis to explore the relationship between bias and reliability. Here we only use the macro topics and top10 WikiProjects. 
+         1. After combining all the variables, we use the regression analysis to explore the relationship between bias and reliability. Here we only use the macro topics and top10 WikiProjects. 
