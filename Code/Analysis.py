@@ -29,7 +29,7 @@ def read_file(INPUT_DATA):
     return citations_news
 
 # use os to find all the file_name in the dir and read it in order
-file_dir = 'E:/First Project/data/dataset.parquet/' # this file include the whole dataset
+file_dir = '.../data/dataset.parquet/' # this file include the whole dataset
 dirs = sorted(os.listdir(file_dir))[2:] # delete first 2 unrelated files
 dataset_news = [] # create a new DataFram to save all the data
 for i in tqdm(dirs):  
@@ -42,10 +42,10 @@ result = pd.concat(dataset_news)
 # split the data into 100 chunks and save it, the total size is 29276667
 for chunksize in tqdm(range(101)):
     chunk = result.iloc[int(len(result)/100)*chunksize:int(len(result)/100)*(chunksize+1)]
-    chunk.to_parquet(r'E:\Project 2(Bias and reability on wiki and news)\data\page&url_'+str(chunksize).zfill(3)+'.parquet')
+    chunk.to_parquet(r'...\data\page&url_'+str(chunksize).zfill(3)+'.parquet')
 
 # for the next time reading, the whole data is 6.51 GB
-file_dir = r'E:\Project 2(Bias and reability on wiki and news)\data/'
+file_dir = r'...\data\'
 def read_dataset(file_dir):
     dirs = sorted(os.listdir(file_dir))
     data_list = [] # create a new DataFram to save all the data
@@ -66,16 +66,11 @@ data.head()#show the first 5 rows
 
 ############# The Second Block: analysis the filtered dataset with [type_of_citation, URL, citations, page_title, Title] ############
 # start analysis
-data = read_dataset(file_dir) #size is 29276667
+data = read_dataset(file_dir) #size is 29276667, read the file with your direction
 citations_web = data[data['type_of_citation']=='cite web'] #the size is 17297863
 citations_news= data[data['type_of_citation']=='cite news'] #the size is 5070203
-# for the citations_web part
-#test = citations_web.dropna(subset=['URL'])# size is 17203966
-#l1=test['URL'].to_list()
-# len(set(l1))
-# Out[26]: 13386520
 
-# 2 methods to extract the domain name from URL 
+# method to extract the domain name from URL 
 from urllib.parse import urlparse # method 1
 import tldextract #another way to extract the domain name, also works for Ipv6
 
@@ -117,7 +112,7 @@ y = list(dic_archive.values())
 #################################################################
 
 #read the googlenews_source, after getting the sources of "news.google" url by script get_news_google_source.py
-with open(r"E:\Project 2(Bias and reability on wiki and news)/googlenews_source.pkl",'rb') as f:
+with open(r"googlenews_source.pkl",'rb') as f:
     googlenews_source = pickle.load(f)
 #already get the google_news sources, which is googlenews_source(a dict)
 #replace the news.google with their news sources, costs 17s
@@ -193,29 +188,29 @@ for i in tqdm(range(len(list_url))):#10s
 list_domain = [get_domain_name(x) for x in tqdm(list_url)]# 3m23s, size is 24956769
 
 ###################################################################################################################
-# plot the cumlative distribution of top 10w domains of all
+# plot the cumlative distribution of top 10w domains of all, these 10w domains can be used in script:get_bais_form_MM.py to extract bias data.
 l1 = list(data.domain.value_counts(normalize=True,dropna=False).cumsum(axis=0))
 x = range(len(l1))
 # plt.figure(dpi=900)
-plt.rcParams['figure.dpi'] = 900
-plt.ticklabel_format(style='plain')#取消科学计数法
+plt.rcParams['figure.dpi'] = 600
+plt.ticklabel_format(style='plain')#
 plt.plot(x,l1)
 plt.title('cumulative number of domain')
 plt.xlabel("unique domains",fontsize=12)
 plt.ylabel("percentage of citations", fontsize=12)
 plt.xticks([i*200000 for i in range(9)],['0','200k','400k','600k','800k','1000k','1200k','1400k','1600k'],fontsize=12)
-position = 140000  #
+position = 100000  #
 plt.axvline(x[position], color='r', linestyle='--')
 plt.text(x[position], l1[position], ' (%d,%.2f)' % (x[position],l1[position]), ha='left', va= 'top',fontsize=10)
 plt.tight_layout()
 ###################################################################################################################
 
 # then match the domain with political bias from Media Bias Monitor(https://twitter-app.mpi-sws.org/media-bias-monitor/)
-# you can find more detail about how to extract in the 
-with open(r"F:\MM_page1_dict.pkl",'rb') as f:
+# you can find more detail about how to extract in the script "get_bais_form_MM.py"
+with open(r"\MM_page1_dict.pkl",'rb') as f:
     MM_page1_dict = pickle.load(f)
 
-with open(r"F:\MM_page2_dict.pkl",'rb') as f:
+with open(r"\MM_page2_dict.pkl",'rb') as f:
     MM_page2_dict = pickle.load(f)
     
 ###################################################################################################################
@@ -304,8 +299,7 @@ plt.tight_layout()
 
 ###################################################################################################################
 #Then let's match topic to final_data
-# here the topic file can be found in 
-
+# here the topic file can be found in https://github.com/alsowbdxa/Code-of-Science-in-Wikipedia/blob/main/Code/Adding_topic_from_Wikipedia_API.py
 # read the final topic dataset,size is 3744440
 with open('page2topic_final.pkl','rb') as f:
     page2topic = pickle.load(f)
@@ -322,13 +316,12 @@ citations_bias_features = final_data.dropna(subset=['new_topic']) #size is 48286
 #remove the page without topic
 mask = (
     (citations_bias_features['new_topic']=='') |
-    # (citations_bias_features['new_topic']=='[]')
     (citations_bias_features['new_topic']=='[[], []]')
     )
 
 citations_bias_features = citations_bias_features[~mask] #size is 4820380
 #
-#plot the top10 and 20 topic with avg_bias_score and their percentage of wiki articles
+#plot the top10 and macro topic with avg_bias_score and their percentage of wiki articles
 unique_page_title = citations_bias_features.drop_duplicates(subset=['page_title'])#size is 1167389
 
 # we use fractional counting in our analysis
@@ -468,9 +461,9 @@ ax2.set_xlabel('Percentage of articles', fontsize=10)
 ###############################################################################
     
 ###################################################################################################################
-# Reliability part
+# Reliability part, get data from script "get_reliability_form_MBFC.py"
 #read mbfc data, whihc is extracted from Media Bias Fact Check(https://mediabiasfactcheck.com/)
-mbfc = pd. read_excel('E:\Project 2(Bias and reability on wiki and news)\Reliability\mbfc.xlsx')
+mbfc = pd. read_excel('mbfc.xlsx') 
 
 mbfc_data = mbfc[['Title','URL','cate','bias_rating','Factual Label','Country','Traffic/Popularity']]
 mbfc_data.columns = ['news_source','url','bias','bias_rating','factual','country','traffic']
@@ -549,7 +542,8 @@ plt.tight_layout()
 ###################################################################################################################
 
 ###################################################################################################################
-##### regression analysis
+##### The Third Block: Regression analysis #####
+################################################
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 from statsmodels.formula.api import ols 
@@ -609,6 +603,7 @@ model_ols = smf.ols(formula="bias_score_avg ~ C(factual, Treatment(reference='MO
 res_ols = model_ols.fit()
 print(res_ols.summary())
 ###############################################################################
+##### The Third Block: Regression analysis end #####
 
 # This is the end of analysis
 
