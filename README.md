@@ -3,7 +3,7 @@
 This repository offers the code we used in the project *News Bias and reliability in Wikipedia*.
 
 Please find the code in the file *Code*, in this file, we list 5 files as below:
-1. [Supply news google sources](Code/get_news_google_source.py): Supplement the data from news google.
+1. [supplement news google sources](Code/get_news_google_source.py): Supplement the data from news google.
 
     1. This script is used for the sources from news.google.com, we use the link to search and find out what news outlet it belongs to.
     2. The result will be used in the second block of Analysis.py.
