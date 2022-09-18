@@ -102,9 +102,13 @@ for i in tqdm(t):
 #for the case: http:/,use below function to filter
 def archive_filter(url):
     if ('http:/w' or 'https:/w') in url:
-        return tldextract.extract(url.split('/',1)[-1])[1]
+        domain = '.'.join(tldextract.extract(url.split('/',1)[-1]))
     else:
-        return tldextract.extract(url)[1]
+        domain = '.'.join(tldextract.extract(url))
+    if domain[0]=='.':
+        domain = domain[1:]
+    return domain
+
 archive_source = [archive_filter(x) for x in archive_url] #size sis 38654
 c_archive = Counter(archive_source) # size is 14802
 dic_archive = dict(c_archive.most_common(100))
@@ -142,9 +146,18 @@ plt.ylabel('source', fontsize=12)
 plt.xlabel('counts', fontsize=12)
 ####################################################
 
-# re-calculate the domain for all the url
+# calculate the domain for all the url
+def archive_filter(url):
+    if ('http:/w' or 'https:/w') in url:
+        domain = '.'.join(tldextract.extract(url.split('/',1)[-1]))
+    else:
+        domain = '.'.join(tldextract.extract(url))
+    if domain[0]=='.':
+        domain = domain[1:]
+    return domain
+
 def get_domain_name(x):
-    # to delete some symbols from the url, or we may get some wrong domains or raise an error
+    # to delete some symbols from the url
     x = x.replace('[','')
     x = x.replace(']','')
     x = x.replace(',','')
@@ -155,13 +168,9 @@ def get_domain_name(x):
         except:
             t = x.split('/',5)[-1]
         return archive_filter(t)
-    domain = tldextract.extract(x)[1] 
-    #'http://espn.go.com/nfl/team/transactions/_/name/car/carolina-panthers'
-    # will be extract domain 'go'
-    if domain =='go' and tldextract.extract(x)[0]!='':
-        domain = tldextract.extract(x)[0] 
-        if '.' in domain:
-            domain  = tldextract.extract(domain)[1] 
+    domain = '.'.join(tldextract.extract(x))
+    if domain[0]=='.':
+        domain = domain[1:]
     return domain
 
 #update the url list with news.google source
@@ -183,39 +192,423 @@ for i in tqdm(range(len(list_url))):#10s
 
 list_domain = [get_domain_name(x) for x in tqdm(list_url)]# 3m23s, size is 24956769
 
-def count_top(data,top_num):   
-    c_ = Counter(data)
-    dic_ = dict(c_.most_common(top_num))
-    x = list(dic_.keys())
-    y = list(dic_.values())
-    return x,y
+###################################################################################################################
+# plot the cumlative distribution of top 10w domains of all
+l1 = list(data.domain.value_counts(normalize=True,dropna=False).cumsum(axis=0))
+x = range(len(l1))
+# plt.figure(dpi=900)
+plt.rcParams['figure.dpi'] = 900
+plt.ticklabel_format(style='plain')#取消科学计数法
+plt.plot(x,l1)
+plt.title('cumulative number of domain')
+plt.xlabel("unique domains",fontsize=12)
+plt.ylabel("percentage of citations", fontsize=12)
+plt.xticks([i*200000 for i in range(9)],['0','200k','400k','600k','800k','1000k','1200k','1400k','1600k'],fontsize=12)
+position = 140000  #
+plt.axvline(x[position], color='r', linestyle='--')
+plt.text(x[position], l1[position], ' (%d,%.2f)' % (x[position],l1[position]), ha='left', va= 'top',fontsize=10)
+plt.tight_layout()
+###################################################################################################################
 
-remove_list = ['google','archive','youtube','go','imdb','amazon','twitter',
-               'facebook']
-#we remove above domain from our domain list
+# then match the domain with political bias from Media Bias Monitor(https://twitter-app.mpi-sws.org/media-bias-monitor/)
+# you can find more detail about how to extract in the 
+with open(r"F:\MM_page1_dict.pkl",'rb') as f:
+    MM_page1_dict = pickle.load(f)
 
-# then try to match the domain with political bias(not the file we extracted), it's https://github.com/Harshdeep1996/politicalBiasSem/blob/main/political_bias_icwsm_2018.tsv
-#read political_bias_icwsm_2018.tsv.txt and try to match
-political_bias = pd.read_csv(r"E:\Project 2(Bias and reability on wiki and news)\political_bias_icwsm_2018.tsv.txt",sep='\t')
-bias = political_bias.dropna(subset=['url']) #13842 out of 13870
-bias['URL'] = bias['url'].progress_apply(lambda x:get_domain_name(x))
-url_bias = dict(zip(bias['URL'],bias['political_bias'])) #size is 6600
-
-def url_bias_score(domain_name):
+with open(r"F:\MM_page2_dict.pkl",'rb') as f:
+    MM_page2_dict = pickle.load(f)
+    
+###################################################################################################################
+#match bias score from MBM
+def match_mm(x):
     try:
-        score = url_bias[domain_name]
+        return MM_page1_dict[x]
     except:
-        score = ''
-    return score
+        return None
+    
+data['data'] = data.domain.progress_apply(lambda x:match_mm(x))
 
-domain_match_bias = [url_bias_score(i) for i in tqdm(list_domain)] # size is 24956769
-# only match 6,938,569 data, takes up  27.8%
-#domain_match_bias.count('') # 18,018,200 not matched
+data_mm = data.dropna(subset=['data'])#size is 4866655, None is 24410012
+len(data_mm.page_title.unique()) #1180508
 
+data_mm['cate_num_data'] = data_mm['data'].progress_apply(lambda x: '10+' if str(x).count('interest_id')>10 else str(str(x).count('interest_id')))
 
+#plot the distribution of MM results and domains.
+x = list(dict(data_mm["cate_num_data"].value_counts()).keys())
+y = list(dict(data_mm["cate_num_data"].value_counts()).values())
+x.append('NaN')
+y.append(24410012)
+py = [i/sum(y) for i in y]#percentage
 
+plt.figure(dpi=900)
+plt.ticklabel_format(style='plain')
+ax = sns.barplot(x=x,y=py,order=['1','2','3','4','5','6','7','8','9','10','10+','NaN'],color="#0000ff")
+plt.xlabel("Number of results in MBM",fontsize=12)
+plt.ylabel("citations", fontsize=12)
+plt.tight_layout()
+###plot the distribution of MM results and domains end.
+###################################################################################################################
 
+unique_s_data = data_mm[['domain','data']].drop_duplicates(['domain']) #5220
 
+#use this method to extract bias score(with average bias score)
+from urllib.parse import urlparse#some urls have subdictionary
 
+def bias_score2(x1,x2): #x1 is data, x2 is domain
+    try:
+        # domain_mm = [get_domain_name(i['url']) for i in x1]
+        domain_mm = [urlparse(i['url']).path for i in x1]
+        title_mm = [i['title'] for i in x1]
+        # title = [i['title'] for i in x1]
+        # dic = eval(domain2mm[x2])
+        xname = x2.replace('www.','')
+        if (xname in domain_mm) or (xname in title_mm):# if exactly match, use it       
+            try:
+                return MM_page2_dict[title_mm[domain_mm.index(xname)]]['political_bias']
+            except: #if doesn't have exact match, use the average score
+                bias_score = np.mean([MM_page2_dict[i]['political_bias'] for i in title_mm])
+                return bias_score
+        else:#if cannot exactly match, use average score
+            bias_score = np.mean([MM_page2_dict[i]['political_bias'] for i in title_mm])
+            return bias_score
+    except:# if doesn't have match result, ignore it
+        return None  
+unique_s_data['bias_score_avg'] = unique_s_data.progress_apply(lambda x: bias_score2(x['data'],x['domain']),axis=1)
+#size is 5220
 
+match_bias = unique_s_data[['domain','bias_score_avg']].copy() 
+# final_data: citations with bias score
+final_data = pd.merge(data_mm,match_bias,on='domain',how='left')#size is 4866655
+# drop the final_data without the bias scores
+final_data.dropna(subset=['bias_score_avg'],inplace=True) #size is 4866377
+
+#final_data.domain.to_list().count('www.youtube.com')#size is 412424
+#final_data_noyoutube = final_data[final_data['domain']!='www.youtube.com')|final_data['domain']!='youtube.com')]# use if needed
+
+###################################################################################################################
+# Now we have equipped each domain with their bias score, then we are going to analyse and visualize it.
+# plot the kde plot
+sns.set_style('whitegrid')
+plt.rcParams['figure.dpi'] = 600
+plt.figure(figsize=(12,8))
+plt.ticklabel_format(style='plain')
+ax1 = sns.distplot(final_data['bias_score_avg'], hist=False, kde_kws={'label':'bw=0.5','bw':0.5},bins=10, color="#0000ff") # binwidth=0.2, ax=ax1)
+ax1.axvline(final_data['bias_score_avg'].mean(),color='red',ls='-',label='mean(%.2f)'%(final_data['bias_score_avg'].mean()))
+ax1.axvline(final_data['bias_score_avg'].median(),color='black',ls='dotted',label='median(%.2f)'%(final_data['bias_score_avg'].median()))
+ax1.legend(fontsize=14)
+ax1.tick_params(labelsize=15)
+ax1.set_xlabel('Bias score', fontsize=20)
+ax1.set_ylabel('Kde', fontsize=20)
+plt.tight_layout()
+###################################################################################################################
+
+###################################################################################################################
+#Then let's match topic to final_data
+# here the topic file can be found in 
+
+# read the final topic dataset,size is 3744440
+with open('page2topic_final.pkl','rb') as f:
+    page2topic = pickle.load(f)
+    
+def match_topic(x):
+    try:
+        return page2topic[x]
+    except:
+        return None
+final_data['new_topic'] = final_data['page_title'].progress_apply(lambda x:match_topic(x))
+
+citations_bias_features = final_data.dropna(subset=['new_topic']) #size is 4828650
+
+#remove the page without topic
+mask = (
+    (citations_bias_features['new_topic']=='') |
+    # (citations_bias_features['new_topic']=='[]')
+    (citations_bias_features['new_topic']=='[[], []]')
+    )
+
+citations_bias_features = citations_bias_features[~mask] #size is 4820380
+#
+#plot the top10 and 20 topic with avg_bias_score and their percentage of wiki articles
+unique_page_title = citations_bias_features.drop_duplicates(subset=['page_title'])#size is 1167389
+
+# we use fractional counting in our analysis
+#this method for all topics
+def fract_topic(x):
+    c = Counter()
+    for i in x:    
+        t = eval(i)
+        frac_t = [i/sum(t[1]) for i in t[1]]
+        c1 = Counter(dict(zip(t[0],frac_t)))
+        c.update(c1)
+    return c
+# this one onle for 4 macro topics
+def fract_topic(x): #this for main topic
+    c = Counter()
+    for i in x:    
+        t = [n.split('.')[0] for n in eval(i)[0]]
+        frac_t = dict()
+        for topic in list(set(t)):
+            # frac_t[topic] = round(t.count(topic)/len(t),2)
+            frac_t[topic] = t.count(topic)/len(t)
+        c.update(frac_t)
+    return c
+
+##############################################################################
+#top10 version
+top10 = [i[0] for i in l.most_common(10)]
+l = [[],[]]
+for i in tqdm(top10):
+    t = unique_page_title[unique_page_title['new_topic'].str.contains(i)]['bias_score_avg'].to_list()
+    l1[0].extend([i]*len(t))
+    l1[1].extend(t)
+top10_violin = pd.concat([pd.DataFrame(i) for i in l],axis=1)#size is 2446985
+top10_violin.columns=['topic','bias_score_avg']
+##############################################################################
+#macro topic version
+macro_topic = [i[0] for i in l.most_common()]
+l = [[],[]]
+for i in tqdm(macro_topic):
+    t = unique_page_title[unique_page_title['new_topic'].str.contains(i)]['bias_score_avg'].to_list()
+    l1[0].extend([i]*len(t))
+    l1[1].extend(t)
+macro_violin = pd.concat([pd.DataFrame(i) for i in l],axis=1)#size is 2446985
+macro_violin.columns=['topic','bias_score_avg']
+##############################################################################
+#plot the violin figure 
+#for top10 topics
+x = top10
+y = [i[1]/sum(l.values()) for i in l.most_common(10)]
+#
+#for macro topic
+x = macro_topic
+y = [i[1]/sum(l.values()) for i in l.most_common(10)]
+##############################################################################
+###plot the top10 version of topic
+pl = sns.color_palette("Blues_r",15)
+plt.figure(dpi=600)
+grid = plt.GridSpec(1, 7, wspace=0.2, hspace=0.5)
+plt.subplot(grid[0,0:5])
+ax1 = sns.violinplot(y=top10_violin["topic"], x=top10_violin["bias_score_avg"],order=x,palette=pl)
+ax1.set_title('Distribution of top10 topics bias score', fontsize=10)
+ax1.set_xlabel('Bias score', fontsize=10)
+ax1.set_ylabel('Topics', fontsize=10)
+ax1.set_yticklabels([i.split('*')[0] for i in x])
+plt.subplot(grid[0,5:7])
+ax2 = sns.barplot(x=y, y=x, palette=pl)
+ax2.set_yticklabels([])
+ax2.set_xlabel('Percentage of articles', fontsize=10)
+##############################################################################
+#for macro topic
+pl = sns.color_palette("Blues_r",15)
+plt.figure(dpi=600)
+grid = plt.GridSpec(1, 7, wspace=0.2, hspace=0.5)
+plt.subplot(grid[0,0:5])
+ax1 = sns.violinplot(y=macro_violin["topic"], x=macro_violin["bias_score_avg"],order=x,palette=pl)
+ax1.set_title('Distribution of macro topics bias score', fontsize=10)
+ax1.set_xlabel('Bias score', fontsize=10)
+ax1.set_ylabel('Topics', fontsize=10)
+ax1.set_yticklabels([i.split('*')[0] for i in x])
+plt.subplot(grid[0,5:7])
+ax2 = sns.barplot(x=y, y=x, palette=pl)
+ax2.set_yticklabels([])
+ax2.set_xlabel('Percentage of articles', fontsize=10)
+##############################################################################
+###################################################################################################################
+
+# use fractional counting for wk_projects, to plot the distribution of project in different bias score group
+def get_project(x):
+    try:
+        return page2project[x]
+    except:
+        return None
+final_data['wk_project'] = final_data['page_title'].progress_apply(lambda x: get_project(x))
+
+citations_bias_project = final_data.dropna(subset=['wk_project']) #size is 801329
+unique_page_title = citations_bias_project.drop_duplicates(subset=['page_title'])#size is 107653
+
+##############################################################################
+def fract_project(x):#use fractional counting to project
+    c = Counter()
+    for i in x:
+        t = eval(i)
+        t1 = list(set(t))
+        n = [t.count(i)/len(t) for i in t1] 
+        c.update(dict(zip(t1,n)))
+    return c
+
+l_project = fract_project(unique_page_title['wk_project'].to_list()) #size is 2582
+#top10 projects
+top10 = [i[0] for i in l_project.most_common(10)]
+l1 = [[],[]]
+for i in tqdm(top10):
+    t = unique_page_title[unique_page_title['wk_project'].str.contains(i)]['bias_score_avg'].to_list()
+    l1[0].extend([i]*len(t))
+    l1[1].extend(t)
+top10_violin = pd.concat([pd.DataFrame(i) for i in l1],axis=1)
+top10_violin.columns=['wk_project','bias_score_avg']
+
+x = top10
+y = [i[1]/sum(l_project.values()) for i in l_project.most_common(10)]
+###############################################################################
+###plot top10 project
+# pl = sns.color_palette("Greens_r",15)
+pl = sns.color_palette("Blues_r",15)
+plt.figure(dpi=600)
+grid = plt.GridSpec(1, 7, wspace=0.2, hspace=0.5)
+plt.subplot(grid[0,0:5])
+ax1 = sns.violinplot(y=top10_violin["wk_project"], x=top10_violin["bias_score_avg"], order=x, palette=pl)
+ax1.set_title('Distribution of top10 wk_project bias score', fontsize=10)
+ax1.set_xlabel('Bias score', fontsize=10)
+ax1.set_ylabel('Wiki_project', fontsize=10)
+ax1.set_yticklabels(x)
+plt.subplot(grid[0,5:7])
+ax2 = sns.barplot(x=y, y=x, palette=pl)
+ax2.set_yticklabels([])
+ax2.set_xlabel('Percentage of articles', fontsize=10)
+###############################################################################
+    
+###################################################################################################################
+# Reliability part
+#read mbfc data, whihc is extracted from Media Bias Fact Check(https://mediabiasfactcheck.com/)
+mbfc = pd. read_excel('E:\Project 2(Bias and reability on wiki and news)\Reliability\mbfc.xlsx')
+
+mbfc_data = mbfc[['Title','URL','cate','bias_rating','Factual Label','Country','Traffic/Popularity']]
+mbfc_data.columns = ['news_source','url','bias','bias_rating','factual','country','traffic']
+
+mbfc_data = mbfc_data[mbfc_data['factual']!='Not Found'] #not found has 99 data
+mbfc_data['domain'] = mbfc_data.url.progress_apply(lambda x:get_domain_name(x))
+
+match = mbfc_data[['domain','factual']]# size is 3586
+match['code'] = match['domain'].progress_apply(lambda x:x.replace('www.',''))
+
+final_data['code'] = final_data['domain'].progress_apply(lambda x:x.replace('www.',''))#4866377
+
+citations_bias_factual = pd.merge(final_data,match,on='code',how='left')#size is 5150954
+
+citations_bias_factual.dropna(subset=['factual'],inplace=True)#size is 3041283
+
+###############################################################################
+#plot the distribution of factual and bias
+pl = sns.diverging_palette(140,15,s=100,l=60,n=6)
+plt.figure(figsize=(10,6),dpi=900)
+plt.ticklabel_format(style='plain')
+ax = sns.countplot(x='factual',data=citations_bias_factual,order=['VERY HIGH','HIGH','MOSTLY FACTUAL','MIXED','LOW','VERY LOW'],palette=pl)
+plt.tick_params(labelsize=14)
+plt.xlabel('Reliability', fontsize=14)
+plt.ylabel('Citation count', fontsize=14)
+ax.tick_params(labelsize=14)
+plt.tight_layout()
+###############################################################################
+
+match['url'] = match['code'].progress_apply(lambda x:'www.'+x)
+match_test = match.drop_duplicates(subset=['url'])
+domain2factual = dict(zip(match_test['url'],match_test['factual'])) #size is 3557
+
+###############################################################################
+# plot top10 news resource with their reliability in different bias level
+citations_categories_not_null = citations_bias_factual[~citations_bias_factual['factual'].isnull()]
+#size is 3041283, the same with citations_bias_factual
+citations_bias_factual.columns
+citations_categories_not_null['discretized_score'] = pd.cut(
+    citations_categories_not_null['bias_score_avg'],
+    bins=[-2.0, -1.0, 0, 1.0, 2.0], 
+    labels=['-2 to -1', '-1 to 0', '0 to 1', '1 to 2'])
+
+aggregated_discretized_cat = citations_categories_not_null[['discretized_score', 'domain_x']].groupby(
+    'discretized_score')['domain_x'].apply(list).reset_index()
+aggregated_discretized_cat['count_categories'] = aggregated_discretized_cat['domain_x'].progress_apply(
+    lambda x: Counter([item for item in x]) )
+discretized_labels = list(aggregated_discretized_cat['discretized_score'])
+aggregated_discretized_cat
+aggregated_discretized_cat.columns
+fig, axes = plt.subplots(2, 2, figsize=(25, 25))
+plt.subplots_adjust(wspace=0.6)
+axes = axes.flatten()
+al = sns.color_palette("Dark2",6)
+plt.figure(dpi=600)
+for index in range(len(discretized_labels)):
+    discretized_label_score = aggregated_discretized_cat[
+        aggregated_discretized_cat['discretized_score'] == discretized_labels[index]][
+        'count_categories'].values[0].most_common(10)
+    subset_cat = pd.DataFrame(discretized_label_score)
+    sum_subset_cat = subset_cat[1].sum()
+    subset_cat[1] = subset_cat[1].apply(lambda x: float(x) / sum_subset_cat)#calculate the percentage of factual
+    subset_cat[2] = subset_cat[0].apply(lambda x: domain2factual[x] if 'www.' in x else domain2factual['www.'+x])
+    ax = sns.barplot(x=1, y=0, hue=2, data=subset_cat, ax=axes[index],palette=al,dodge=False,hue_order=['VERY HIGH','HIGH','MOSTLY FACTUAL','MIXED','LOW','VERY LOW'])
+    ax.set_title(discretized_labels[index], fontsize=30)
+    ax.set_xlabel('', fontsize=20)
+    ax.set_ylabel('', fontsize=20)
+    ax.tick_params(axis='both', which='major', labelsize=25)
+    ax.tick_params(axis='both', which='minor', labelsize=25)
+    ax.legend(title='reliability')
+    plt.setp(ax.get_legend().get_texts(), fontsize='25') # for legend text    
+    plt.setp(ax.get_legend().get_title(), fontsize='25') # for legend title
+plt.tight_layout()
+###############################################################################
+# Reliability part end
+###################################################################################################################
+
+###################################################################################################################
+##### regression analysis
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from statsmodels.formula.api import ols 
+from statsmodels.formula.api import poisson
+
+citations_bias_reg = citations_bias_factual[['bias_score_avg','new_topic','wk_project','factual']]#size is 3041283
+
+citations_bias_reg_notnull = citations_bias_reg.dropna().reset_index()#604459
+citations_bias_reg_notnull.drop(columns=['index'],inplace=True)
+###############################################################################
+# process the topic and wikiproject
+#if one topic exist, we give it 1,if not, we give 0
+def reg_topic(x):
+    c = {'Geography':0,'Culture':0,'History_and_Society':0,'STEM':0}  
+    t = eval(x)
+    t0 = list(set([i.split('.')[0] for i in t[0]]))
+    for i in t0:
+        c[i]+=1
+    l.append(list(c.values()))
+    
+l=[]
+citations_bias_reg_notnull['new_topic'].progress_apply(lambda x:reg_topic(x))
+r_topic = pd.DataFrame(l)
+r_topic.columns = ['Geography','Culture','History_and_Society','STEM']
+# citations_bias_reg_notnull = pd.concat([citations_bias_reg_notnull,r_topic])
+citations_bias_reg_notnull['Geography']=r_topic['Geography'].to_list()
+citations_bias_reg_notnull['Culture']=r_topic['Culture'].to_list()
+citations_bias_reg_notnull['History_and_Society']=r_topic['History_and_Society'].to_list()
+citations_bias_reg_notnull['STEM']=r_topic['STEM'].to_list()
+###############################################################################
+#only give 0 or 1 if the project exists
+def reg_project(x):
+    c = dict(zip(top10_project,[0]*10))
+    c['Other']=0
+    t = eval(x)
+    t1 = list(set([i if i in top10_project else 'Other' for i in t]))
+    for i in t1:
+        c[i]+=1
+    l.append(list(c.values()))
+
+l=[]
+citations_bias_reg_notnull['wk_project'].progress_apply(lambda x:reg_project(x))
+r_project = pd.DataFrame(l)
+r_project.columns = top10_project+['Other']
+for i in top10_project+['Other']:
+    citations_bias_reg_notnull[i]=r_project[i].to_list()
+###############################################################################
+# rename the columns
+citations_bias_reg_notnull.columns = ['bias_score_avg', 'new_topic', 'wk_project', 'factual', 'Geography',
+       'Culture', 'History_and_Society', 'STEM', 'Biography', 'Medicine',
+       'Biography_science_and_academia_work_group', 'United_States',
+       'Articles_for_creation', 'Politics', 'India', 'Pharmacology', 'Lists',
+       'Military_history', 'Other']
+
+model_ols = smf.ols(formula="bias_score_avg ~ C(factual, Treatment(reference='MOSTLY FACTUAL')) + Geography + Culture + History_and_Society + STEM + Biography + Medicine + Biography_science_and_academia_work_group + United_States + Articles_for_creation+ Politics + India + Pharmacology + Lists + Military_history + Other",data=citations_bias_reg_notnull)
+
+res_ols = model_ols.fit()
+print(res_ols.summary())
+###############################################################################
+
+# This is the end of analysis
 
