@@ -29,7 +29,7 @@ Please find the code in the file *Code*, in this file, we list 5 files as below:
     1. This script contains 3 blocks: read the whole dataset on Wikipedia, analysis the dataset and Regression analysis.
     
     2. Block 1: Read the whole dataset of Wikipedia
-        1. You need to read the *Wikipedia Citations* dataset and download the [Wikipedia Citations dataset **minimal**](https://github.com/Harshdeep1996/cite-  classifications-wiki) and store it in the folder and name it as "minimal_dataset.parquet".
+        1. You need to read the *Wikipedia Citations* dataset and download the [Wikipedia Citations dataset **minimal**](https://github.com/Harshdeep1996/cite-classifications-wiki) and store it in the folder and name it as "minimal_dataset.parquet".
         2. Execute the first part script to read the main dataset we need.
     
     3. Block 2: Analysis of the dataset.
