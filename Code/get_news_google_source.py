@@ -26,7 +26,7 @@ ua = [
   		'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; SV1; QQDownload 732; .NET4.0C; .NET4.0E; SE 2.X MetaSr 1.0) ',
       ]
 
-file_name = r"E:\Project 2(Bias and reability on wiki and news)/news_google.txt" # this file contains all the urls which includes 'new.google'
+file_name = r"news_google.txt" # this file contains all the urls which includes 'new.google'
 # read the file
 urls = []
 for line in open(file_name,"r"): #
@@ -34,7 +34,7 @@ for line in open(file_name,"r"): #
 
 name=dict()
 ip = []
-for line in open("F:/1688/ip(3.14).txt","r",encoding='utf8'): #设置文件对象并读取每一行文件
+for line in open("F:/1688/ip(3.14).txt","r",encoding='utf8'): 
     ip.append(line.strip())
 
 
@@ -61,18 +61,17 @@ def get_name(i):
         except:
             news_name = ''
     name[i] = news_name
-    with open(r"E:\Project 2(Bias and reability on wiki and news)/googlenews_source.pkl",'ab') as f:
+    with open(r"googlenews_source.pkl",'ab') as f:
         pickle.dump(name,f)
     time.sleep(1)
     
 count1 = 0
 count2 = 0
-for i in tqdm(urls[:20000]):
+for i in tqdm(urls):
     header={
             'User-Agent': random.choice(ua)
             ,'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9'
-            ,'cookie': 'CONSENT=YES+TW.zh-CN+20160703-06-0; HSID=Af7CXxDBYqPMmKvbw; SSID=A-sr1yLdpMC34O7im; APISID=_lSxPlsWnNJQ6SOy/AiYxSaHhARFGSh2Ij; SAPISID=bqRIpyi2ufDaKpi5/AuCReqJuDM93SMdKy; __Secure-1PAPISID=bqRIpyi2ufDaKpi5/AuCReqJuDM93SMdKy; __Secure-3PAPISID=bqRIpyi2ufDaKpi5/AuCReqJuDM93SMdKy; SID=EQiV81LsUmfpDOQ0MDh_3mkUxpyj0HQk7yeSEKbvTNZhCDeuC_IBK7eJZzQs36RsvXSotw.; __Secure-1PSID=EQiV81LsUmfpDOQ0MDh_3mkUxpyj0HQk7yeSEKbvTNZhCDeu9ixdDCztX5VYZdLgwtrsGg.; __Secure-3PSID=EQiV81LsUmfpDOQ0MDh_3mkUxpyj0HQk7yeSEKbvTNZhCDeu9wK4VHSVsv5iQlFX7eHcSg.; OGPC=19010602-1:19015941-1:19008572-1:; 1P_JAR=2021-12-08-10; OGP=-19010602:-19015941:-19008572:; NID=511=Rmbk9RsgIpi1-2vWahaRr44h664mPck_XhBAz_7zh7ZSzoH8Wf_Lr2BWSRyVm3MxUmtJ_0DR7ffHoHqTsJgVQsd1EzjxVfvuf3KpDI8DN8g898JQGgunx1RPQM8RMnK3cSyQGBWDOCuZhmkQL78_FXr3bRwzhr1vBrVCvNqlWqDgUoBiEvrvWm0uThNDQc9GaKUCzAyWAt8; GOOGLE_ABUSE_EXEMPTION=ID=db33f79c2f4dfaf3:TM=1639045992:C=r:IP=24.132.64.125-:S=4b6RzAHnJ2YBHtUH3zrv02w; GN_PREF=W251bGwsIkNBSVNDd2lRdDhlTkJoRDQtZmhSIl0_; _ga=GA1.3.1751834713.1639046034; _gid=GA1.3.1476904321.1639046035; OTZ=6279034_52_52_123900_48_436380; SIDCC=AJi4QfHFqP6B8DU4TH-iXYSiwBXr0uNYO4idKWj5NBdrqFirCXtI7S3F7_Xld1ca-Gk0ejqEr1M; __Secure-3PSIDCC=AJi4QfGs_PPIvRjZbZhG0apW0JWbAGdWfKH2AmUNRjCeZEly8ZJo4V5rVdamFQ763-6UrfPilg'
-            }
+            ,'cookie': 'USE YOUR COOKIE'            }
     get_name(i)
     # if name[i]=='':
     #     get_name(i)
@@ -83,15 +82,14 @@ for i in tqdm(urls[:20000]):
         count1 = 0
         count2 = 0
     if count1>10:
-        header['cookie'] = 'CONSENT=YES+TW.zh-CN+20160703-06-0; HSID=Af7CXxDBYqPMmKvbw; SSID=A-sr1yLdpMC34O7im; APISID=_lSxPlsWnNJQ6SOy/AiYxSaHhARFGSh2Ij; SAPISID=bqRIpyi2ufDaKpi5/AuCReqJuDM93SMdKy; __Secure-1PAPISID=bqRIpyi2ufDaKpi5/AuCReqJuDM93SMdKy; __Secure-3PAPISID=bqRIpyi2ufDaKpi5/AuCReqJuDM93SMdKy; SID=EQiV81LsUmfpDOQ0MDh_3mkUxpyj0HQk7yeSEKbvTNZhCDeuC_IBK7eJZzQs36RsvXSotw.; __Secure-1PSID=EQiV81LsUmfpDOQ0MDh_3mkUxpyj0HQk7yeSEKbvTNZhCDeu9ixdDCztX5VYZdLgwtrsGg.; __Secure-3PSID=EQiV81LsUmfpDOQ0MDh_3mkUxpyj0HQk7yeSEKbvTNZhCDeu9wK4VHSVsv5iQlFX7eHcSg.; OGPC=19010602-1:19015941-1:19008572-1:; 1P_JAR=2021-12-08-10; OGP=-19010602:-19015941:-19008572:; NID=511=Rmbk9RsgIpi1-2vWahaRr44h664mPck_XhBAz_7zh7ZSzoH8Wf_Lr2BWSRyVm3MxUmtJ_0DR7ffHoHqTsJgVQsd1EzjxVfvuf3KpDI8DN8g898JQGgunx1RPQM8RMnK3cSyQGBWDOCuZhmkQL78_FXr3bRwzhr1vBrVCvNqlWqDgUoBiEvrvWm0uThNDQc9GaKUCzAyWAt8; GN_PREF=W251bGwsIkNBSVNDd2lRdDhlTkJoRDQtZmhSIl0_; _gid=GA1.3.1476904321.1639046035; _ga=GA1.3.1751834713.1639046034; OTZ=6279034_52_52_123900_48_436380; SIDCC=AJi4QfFl7bmpCbSru0_1Z7weh3aDI7lRGogyzJaDgqdt7Xm-ToISeKLM-Lk-BSQjR8O1PMyRMP0; __Secure-3PSIDCC=AJi4QfERMrXPEmiZ4vPPPEunIKdThhHZXTNRSiK7Q59sWSMHgo__kXcWHtR6KzZ77uWXBrzXDw'
-        # input('update the cookie')
+        header['cookie'] = ''
         count1 = 0
         count2 = 0
         
 import pickle
-with open(r"E:\Project 2(Bias and reability on wiki and news)/googlenews_source.pkl",'wb') as f:
+with open(r"googlenews_source.pkl",'wb') as f:
     pickle.dump(name,f)
         
-with open(r"E:\Project 2(Bias and reability on wiki and news)/googlenews_source.pkl",'rb') as f:
+with open(r"googlenews_source.pkl",'rb') as f:
     googlenews_source = pickle.load(f)
 #################################################################
