@@ -65,10 +65,7 @@ for index in tqdm(range(len(leaning))):
                 error.append(title)
                 error1.append([title,source_resp])
                 continue
-        # soup_source = BeautifulSoup(source_resp.text, 'html.parser')
-        # bias_rating = leaning[index].split('com')[-1].replace('/','')
-        # bias_rating = url = factual_status = MBFC_Credibility_Rating = country =  ''
-
+        
         soup_info = BeautifulSoup(s_resp, 'html.parser')
         info = soup_info.findAll('p')[0].text
         cate = leaning[index].split('com')[-1].replace('/','')
@@ -79,20 +76,16 @@ for index in tqdm(range(len(leaning))):
         
         try:
             MBFC_Credibility_Rating = info.split('MBFC Credibility Rating:')[1].split('\n')[0].strip()
-            # MBFC_Credibility_Rating = source_resp.text.split('MBFC Credibility Rating:')[1].split('strong')[1]
-            # MBFC_Credibility_Rating = MBFC_Credibility_Rating.replace('>','').replace('<','').replace('/','')
         except:
             MBFC_Credibility_Rating = 'Not Found'
         
         try:
             country = info.split('Country:')[1].split('\n')[0].strip()
-            # country = source_resp.text.split('Country:')[1].split('<')[1].split('>')[-1].split("(")[0].strip()
         except:
             country = 'Not Found'
             
         try:
             factual_status = info.split('Factual Reporting:')[1].split('\n')[0].strip()
-            # factual_status = source_resp.text.split('Factual Reporting:')[1].split('-')[0].strip()
         except:
             try:
                 factual_status = source_resp.text.split('Factual Reporting:')[1].split('-')[0].strip()
