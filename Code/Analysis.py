@@ -35,7 +35,6 @@ dataset_news = [] # create a new DataFram to save all the data
 for i in tqdm(dirs):  
     content = read_file(file_dir+i)
     dataset_news.append(content)
-# cost around 90s
 #concat and save the data
 result = pd.concat(dataset_news)
 
@@ -44,7 +43,7 @@ for chunksize in tqdm(range(101)):
     chunk = result.iloc[int(len(result)/100)*chunksize:int(len(result)/100)*(chunksize+1)]
     chunk.to_parquet(r'...\data\page&url_'+str(chunksize).zfill(3)+'.parquet')
 
-# for the next time reading, the whole data is 6.51 GB
+# for the next time reading, the whole data is abuot 6.51 GB
 file_dir = r'...\data\'
 def read_dataset(file_dir):
     dirs = sorted(os.listdir(file_dir))
@@ -56,17 +55,11 @@ def read_dataset(file_dir):
     return data
 
 data = read_dataset(file_dir) #size is 29276667
-#test = data.dropna(subset=['URL'])# size is 24956769
-
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
-pd.set_option('max_colwidth',100)
-data.head()#show the first 5 rows
 ###################################################################################
 
 ############# The Second Block: analysis the filtered dataset with [type_of_citation, URL, citations, page_title, Title] ############
 # start analysis
-data = read_dataset(file_dir) #size is 29276667, read the file with your direction
+data = read_dataset(file_dir) #size is 29276667, read the file with your direction(the dataset mentioned above)
 citations_web = data[data['type_of_citation']=='cite web'] #the size is 17297863
 citations_news= data[data['type_of_citation']=='cite news'] #the size is 5070203
 
@@ -128,8 +121,7 @@ google_news = [i for i in list_url if 'news.google' in i]#urls contains news.goo
 google_source = [googlenews_source[i] for i in google_news]
 google_source.count('') #12179 not matched
 
-import seaborn as sns
-
+#plot the distribution
 c_google = Counter(google_source)
 dic_google = dict(c_google.most_common(100))
 x = list(dic_google.keys())
@@ -169,7 +161,7 @@ def get_domain_name(x):
     return domain
 
 #update the url list with news.google source
-for i in tqdm(range(len(list_url))):  #26s
+for i in tqdm(range(len(list_url))):  
     try:
         t = googlenews_source[list_url[i]].lower()
         list_url[i] = t
@@ -185,7 +177,7 @@ for i in tqdm(range(len(list_url))):#10s
     except:
         pass
 
-list_domain = [get_domain_name(x) for x in tqdm(list_url)]# 3m23s, size is 24956769
+list_domain = [get_domain_name(x) for x in tqdm(list_url)]#size is 24956769
 
 ###################################################################################################################
 # plot the cumlative distribution of top 10w domains of all, these 10w domains can be used in script:get_bais_form_MM.py to extract bias data.
@@ -320,7 +312,6 @@ mask = (
     )
 
 citations_bias_features = citations_bias_features[~mask] #size is 4820380
-#
 #plot the top10 and macro topic with avg_bias_score and their percentage of wiki articles
 unique_page_title = citations_bias_features.drop_duplicates(subset=['page_title'])#size is 1167389
 
@@ -568,7 +559,7 @@ l=[]
 citations_bias_reg_notnull['new_topic'].progress_apply(lambda x:reg_topic(x))
 r_topic = pd.DataFrame(l)
 r_topic.columns = ['Geography','Culture','History_and_Society','STEM']
-# citations_bias_reg_notnull = pd.concat([citations_bias_reg_notnull,r_topic])
+
 citations_bias_reg_notnull['Geography']=r_topic['Geography'].to_list()
 citations_bias_reg_notnull['Culture']=r_topic['Culture'].to_list()
 citations_bias_reg_notnull['History_and_Society']=r_topic['History_and_Society'].to_list()
